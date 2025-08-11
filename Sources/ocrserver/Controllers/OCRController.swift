@@ -64,6 +64,11 @@ func runVisionOnImage(image: Data? = nil, cg: CGImage? = nil) async -> String {
     let results = await withCheckedContinuation { continuation in
         
         let request = VNRecognizeTextRequest(completionHandler: {(req, error) in
+			if error != nil {
+				// always resumed via catch block
+				return
+			}
+			
             guard let observations = req.results as? [VNRecognizedTextObservation] else {
                 continuation.resume(returning: "")
                 return
@@ -78,7 +83,7 @@ func runVisionOnImage(image: Data? = nil, cg: CGImage? = nil) async -> String {
         do {
             try requestHandler.perform([request])
         } catch {
-            continuation.resume(returning: "")
+			continuation.resume(returning: "")
         }
         
     }
