@@ -5,12 +5,13 @@ import Vision
 import PDFKit
 
 struct OcrResponse: Content {
-    var ocrText: String;
+    var ocrText: String
 }
 
 struct OcrRequest: Content {
-    var file: Data;
-    var secret: String;
+    var file: Data
+    var secret: String
+    var includePdfTextLayer: Bool
 }
 
 struct Settings: Content {
@@ -27,6 +28,7 @@ func randomString(_ length: Int) -> String {
 func runPdfToText(pdf: Data) -> String {
     let pdfDest = Settings.pdfTempFolder.appendingPathComponent(randomString(10)).appendingPathExtension("pdf")
     var out: String = "";
+    
     do {
         try pdf.write(to: pdfDest)
         out = try safeShell(Settings.pdfToTextLocation + " " + pdfDest.absoluteString + " -")
@@ -100,7 +102,11 @@ struct OCRController: RouteCollection {
         let doc = PDFDocument(data: reqData.file)
         
         if (doc != nil) {
-            var text = runPdfToText(pdf: reqData.file)
+            var text = ""
+            
+            if reqData.includePdfTextLayer {
+                text = runPdfToText(pdf: reqData.file) + " "
+            }
             
             let images = await extractImages(from: doc!)
             
