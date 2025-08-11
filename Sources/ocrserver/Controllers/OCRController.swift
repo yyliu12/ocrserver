@@ -8,10 +8,15 @@ struct OcrResponse: Content {
     var ocrText: String
 }
 
-struct OcrRequest: Content {
+struct OcrPDFRequest: Content {
     var file: Data
     var secret: String
     var includePdfTextLayer: Bool
+}
+
+struct OcrImageRequest: Content {
+	var file: Data
+	var secret: String
 }
 
 struct Settings: Content {
@@ -92,11 +97,11 @@ struct OCRController: RouteCollection {
         }
     }
     
-    func ocrPDF(req: Request) async throws -> OcrResponse {
-        let reqData = try req.content.decode(OcrRequest.self)
+    func ocrPDF(req: Request) async throws -> String {
+        let reqData = try req.content.decode(OcrPDFRequest.self)
         
         if (reqData.secret != Settings.secret) {
-            return OcrResponse(ocrText: "Invalid secret")
+            return "Invalid secret"
         }
         
         let doc = PDFDocument(data: reqData.file)
@@ -119,19 +124,19 @@ struct OCRController: RouteCollection {
                 }
             }
             
-            return OcrResponse(ocrText: text)
+            return text
         } else {
-            return OcrResponse(ocrText: "")
+            return ""
         }
     }
     
-    func ocrImage(req: Request) async throws -> OcrResponse {
-        let reqData = try req.content.decode(OcrRequest.self)
+    func ocrImage(req: Request) async throws -> String {
+        let reqData = try req.content.decode(OcrImageRequest.self)
         
         if (reqData.secret != Settings.secret) {
-            return OcrResponse(ocrText: "Invalid secret")
+            return "Invalid secret"
         }
         
-        return await OcrResponse(ocrText: runVisionOnImage(image: reqData.file))
+        return await runVisionOnImage(image: reqData.file)
     }
 }
